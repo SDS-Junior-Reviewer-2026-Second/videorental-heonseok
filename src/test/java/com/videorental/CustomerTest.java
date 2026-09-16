@@ -1,114 +1,144 @@
 package com.videorental;
 
-
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CustomerTest {
 
+    private static final String CUSTOMER_NAME = "name";
+    private static final String MOVIE_TITLE = "영화명";
+
+    private static final double REGULAR_BASE_PRICE = 2.0;
+    private static final int REGULAR_FREE_DAYS = 2;
+
+    private static final double NEW_RELEASE_DAILY_PRICE = 3.0;
+
+    private static final double CHILDRENS_BASE_PRICE = 1.5;
+    private static final int CHILDRENS_FREE_DAYS = 3;
+
+    private static final double EXTRA_DAY_PRICE = 1.5;
+
+    private Customer customer;
+
+    @BeforeEach
+    void setUp() {
+        customer = new Customer(CUSTOMER_NAME);
+    }
+
     @Test
     void regularUnderThreeDays() {
-        Customer customer = new Customer("name");
-        customer.addRental(new Rental(new Movie("Regular Movie", Movie.REGULAR), 2));
-        String result = customer.statement();
+        int daysRented = 2;
+        customer.addRental(new Rental(new Movie(MOVIE_TITLE, Movie.REGULAR), daysRented));
 
-        String expected = "Rental Record for name\n" +
-                "\t2.0(Regular Movie)\n" +
-                "Amount owed is 2.0\n" +
-                "You earned 1 frequent renter pointers";
-        assertEquals(expected, result);
+        double expectedAmount = REGULAR_BASE_PRICE;
+
+        assertEquals(
+                expectedStatement(expectedAmount, 1, line(expectedAmount)),
+                customer.statement());
     }
 
     @Test
     void regularOverTwoDays() {
-        Customer customer = new Customer("name");
-        customer.addRental(new Rental(new Movie("Regular Movie", Movie.REGULAR), 5));
-        String result = customer.statement();
+        int daysRented = 5;
+        customer.addRental(new Rental(new Movie(MOVIE_TITLE, Movie.REGULAR), daysRented));
 
-        String expected = "Rental Record for name\n" +
-                "\t6.5(Regular Movie)\n" +
-                "Amount owed is 6.5\n" +
-                "You earned 1 frequent renter pointers";
-        assertEquals(expected, result);
+        double expectedAmount = REGULAR_BASE_PRICE + (daysRented - REGULAR_FREE_DAYS) * EXTRA_DAY_PRICE;
+
+        assertEquals(
+                expectedStatement(expectedAmount, 1, line(expectedAmount)),
+                customer.statement());
     }
 
     @Test
     void newReleaseOneDay() {
-        Customer customer = new Customer("name");
-        customer.addRental(new Rental(new Movie("New Release Movie", Movie.NEW_RELEASE), 1));
-        String result = customer.statement();
+        int daysRented = 1;
+        customer.addRental(new Rental(new Movie(MOVIE_TITLE, Movie.NEW_RELEASE), daysRented));
 
-        String expected = "Rental Record for name\n" +
-                "\t3.0(New Release Movie)\n" +
-                "Amount owed is 3.0\n" +
-                "You earned 1 frequent renter pointers";
-        assertEquals(expected, result);
+        double expectedAmount = daysRented * NEW_RELEASE_DAILY_PRICE;
+
+        assertEquals(
+                expectedStatement(expectedAmount, 1, line(expectedAmount)),
+                customer.statement());
     }
 
     @Test
     void newReleaseMultiDays() {
-        Customer customer = new Customer("name");
-        customer.addRental(new Rental(new Movie("New Release Movie", Movie.NEW_RELEASE), 3));
-        String result = customer.statement();
+        int daysRented = 3;
+        customer.addRental(new Rental(new Movie(MOVIE_TITLE, Movie.NEW_RELEASE), daysRented));
 
-        String expected = "Rental Record for name\n" +
-                "\t9.0(New Release Movie)\n" +
-                "Amount owed is 9.0\n" +
-                "You earned 2 frequent renter pointers";
-        assertEquals(expected, result);
+        double expectedAmount = daysRented * NEW_RELEASE_DAILY_PRICE;
+
+        assertEquals(
+                expectedStatement(expectedAmount, 2, line(expectedAmount)),
+                customer.statement());
     }
 
     @Test
     void childrenUnderFourDays() {
-        Customer customer = new Customer("name");
-        customer.addRental(new Rental(new Movie("Children Movie", Movie.CHILDRENS), 3));
-        String result = customer.statement();
+        int daysRented = 3;
+        customer.addRental(new Rental(new Movie(MOVIE_TITLE, Movie.CHILDRENS), daysRented));
 
-        String expected = "Rental Record for name\n" +
-                "\t1.5(Children Movie)\n" +
-                "Amount owed is 1.5\n" +
-                "You earned 1 frequent renter pointers";
-        assertEquals(expected, result);
+        double expectedAmount = CHILDRENS_BASE_PRICE;
+
+        assertEquals(
+                expectedStatement(expectedAmount, 1, line(expectedAmount)),
+                customer.statement());
     }
 
     @Test
     void childrenOverThreeDays() {
-        Customer customer = new Customer("name");
-        customer.addRental(new Rental(new Movie("영화명", Movie.CHILDRENS), 4));
-        String result = customer.statement();
+        int daysRented = 4;
+        customer.addRental(new Rental(new Movie(MOVIE_TITLE, Movie.CHILDRENS), daysRented));
 
-        String expected = "Rental Record for name\n" +
-                "\t3.0(영화명)\n" +
-                "Amount owed is 3.0\n" +
-                "You earned 1 frequent renter pointers";
-        assertEquals(expected, result);
+        double expectedAmount = CHILDRENS_BASE_PRICE + (daysRented - CHILDRENS_FREE_DAYS) * EXTRA_DAY_PRICE;
+
+        assertEquals(
+                expectedStatement(expectedAmount, 1, line(expectedAmount)),
+                customer.statement());
     }
 
     @Test
     void multipleRentalsMixed() {
-        Customer customer = new Customer("name");
-        customer.addRental(new Rental(new Movie("Regular Movie", Movie.REGULAR), 3));
-        customer.addRental(new Rental(new Movie("New Release Movie", Movie.NEW_RELEASE), 2));
-        customer.addRental(new Rental(new Movie("Children Movie", Movie.CHILDRENS), 5));
-        String result = customer.statement();
+        int regularDays = 3;
+        int newReleaseDays = 2;
+        int childrensDays = 5;
 
-        String expected = "Rental Record for name\n" +
-                "\t3.5(Regular Movie)\n" +
-                "\t6.0(New Release Movie)\n" +
-                "\t4.5(Children Movie)\n" +
-                "Amount owed is 14.0\n" +
-                "You earned 4 frequent renter pointers";
-        assertEquals(expected, result);
+        customer.addRental(new Rental(new Movie(MOVIE_TITLE, Movie.REGULAR), regularDays));
+        customer.addRental(new Rental(new Movie(MOVIE_TITLE, Movie.NEW_RELEASE), newReleaseDays));
+        customer.addRental(new Rental(new Movie(MOVIE_TITLE, Movie.CHILDRENS), childrensDays));
+
+        double regularAmount = REGULAR_BASE_PRICE + (regularDays - REGULAR_FREE_DAYS) * EXTRA_DAY_PRICE;
+        double newReleaseAmount = newReleaseDays * NEW_RELEASE_DAILY_PRICE;
+        double childrensAmount = CHILDRENS_BASE_PRICE + (childrensDays - CHILDRENS_FREE_DAYS) * EXTRA_DAY_PRICE;
+        double totalAmount = regularAmount + newReleaseAmount + childrensAmount;
+        int totalPoints = 1 + 2 + 1;
+
+        assertEquals(
+                expectedStatement(totalAmount, totalPoints,
+                        line(regularAmount),
+                        line(newReleaseAmount),
+                        line(childrensAmount)),
+                customer.statement());
     }
 
     @Test
     void noRentals() {
-        Customer customer = new Customer("name");
-        String result = customer.statement();
+        assertEquals(expectedStatement(0.0, 0), customer.statement());
+    }
 
-        String expected = "Rental Record for name\n" +
-                "Amount owed is 0.0\n" +
-                "You earned 0 frequent renter pointers";
-        assertEquals(expected, result);
+    private String line(double amount) {
+        return "\t" + amount + "(" + MOVIE_TITLE + ")";
+    }
+
+    private String expectedStatement(double totalAmount, int totalPoints, String... lines) {
+        StringBuilder statement = new StringBuilder("Rental Record for " + CUSTOMER_NAME + "\n");
+        for (String line : lines) {
+            statement.append(line).append("\n");
+        }
+        statement.append("Amount owed is ").append(totalAmount).append("\n");
+        statement.append("You earned ").append(totalPoints).append(" frequent renter pointers");
+        return statement.toString();
     }
 }
